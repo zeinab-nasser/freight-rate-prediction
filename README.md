@@ -1,46 +1,49 @@
 # Freight Rate Prediction
 
-A machine learning project for predicting freight rates from shipment, route, geographic, temporal, and market-related features.
+A reproducible machine learning pipeline for predicting freight rates from shipment characteristics, route information, geographic relationships, temporal patterns, and market signals.
 
-The project follows a complete machine learning workflow:
+The project implements an end-to-end regression workflow covering:
 
-**Data Exploration → Feature Engineering → Preprocessing → Model Evaluation → Final Model Training → Prediction Generation**
+**Data Exploration → Feature Engineering → Preprocessing → Model Evaluation → Final Training → Validation Prediction → December Forecast**
 
 ---
 
 ## 📌 Project Overview
 
-Freight pricing is influenced by multiple factors, including:
+Freight rates are influenced by a combination of route, shipment, geographic, temporal, and market-related factors.
 
-* Pickup and delivery locations
-* Geographic distance
-* Shipment distance
-* Equipment type
-* Shipment weight
-* Market conditions
-* Quote signals
-* Temporal patterns
+This project develops a machine learning solution to estimate the target variable:
 
-This project develops a regression-based machine learning solution to estimate freight rates (`posted_rate`) from available shipment and market information.
+```text
+posted_rate
+```
 
-The final pipeline trains a **Linear Regression** model on the complete development dataset and generates:
+The workflow is designed to be reproducible and modular, with dedicated notebooks for exploration, preprocessing, model evaluation, and final prediction generation.
 
-1. Predictions for **12,000 validation loads**
-2. Daily freight-rate predictions for **December 2025**
-3. Reusable preprocessing and model artifacts
+The final pipeline produces:
+
+* A trained Linear Regression model
+* A reusable preprocessing pipeline
+* Predictions for **12,000 validation loads**
+* Daily freight-rate predictions for **December 2025**
+* Reusable serialized model artifacts
+* A submission-ready prediction file
+* A December forecast visualization
 
 ---
 
-## 🎯 Objective
+# 🎯 Objective
 
-The primary objective is to build a reproducible machine learning pipeline capable of predicting freight rates while maintaining a clear separation between:
+The primary objective is to build a reliable regression pipeline capable of predicting freight rates while maintaining a clear separation between:
 
-* Data exploration
-* Feature engineering
-* Preprocessing
-* Model evaluation
-* Final model training
-* Prediction generation
+1. Data exploration
+2. Feature engineering
+3. Data preprocessing
+4. Model evaluation
+5. Model selection
+6. Final model training
+7. Prediction generation
+8. Output validation
 
 The target variable is:
 
@@ -50,16 +53,59 @@ posted_rate
 
 ---
 
+# 🏗️ Project Architecture
+
+The project is organized into four main stages:
+
+```text
+Raw Data
+   │
+   ▼
+Data Exploration
+   │
+   ▼
+Feature Engineering
+   │
+   ▼
+Preprocessing Pipeline
+   │
+   ▼
+Model Evaluation
+   │
+   ▼
+Model Selection
+   │
+   ▼
+Final Training
+   │
+   ├──► Validation Predictions
+   │
+   └──► December 2025 Forecast
+```
+
+---
+
 # 📂 Project Structure
 
 ```text
 freight-rate-prediction/
 │
+├── .gitignore
+│
+├── artifacts/
+│   ├── final_linear_regression.joblib
+│   ├── final_preprocessor.joblib
+│   ├── preprocessor.joblib
+│   ├── X_train_processed.npz
+│   ├── X_val_processed.npz
+│   ├── y_train.csv
+│   └── y_val.csv
+│
 ├── data/
+│   ├── december-chart-inputs.csv
 │   ├── train-test.csv
-│   ├── validation.csv
 │   ├── validation-predictions-template.csv
-│   └── december-chart-inputs.csv
+│   └── validation.csv
 │
 ├── notebooks/
 │   ├── 01_data_exploration.ipynb
@@ -67,133 +113,49 @@ freight-rate-prediction/
 │   ├── 03_modeling_evaluation.ipynb
 │   └── 04_final_model.ipynb
 │
-├── artifacts/
-│   ├── preprocessor.joblib
-│   ├── final_preprocessor.joblib
-│   ├── final_linear_regression.joblib
-│   ├── X_train_processed.npz
-│   ├── X_val_processed.npz
-│   ├── y_train.csv
-│   └── y_val.csv
+├── scorer_results/
+│   └── candidate_december.png
 │
-├── validation_predictions.csv
-└── README.md
+├── src/
+│   ├── features.py
+│   ├── model.py
+│   ├── prediction.py
+│   ├── preprocessing.py
+│   └── __pycache__/
+│
+├── spotter-ml-env/
+│
+├── README.md
+├── requirements.txt
+├── score.py
+└── validation_predictions.csv
 ```
+
+> `spotter-ml-env/` is the local Python virtual environment and is not required for reproducing the project on another machine.
 
 ---
 
-# 🔬 Machine Learning Workflow
-
-## 1. Data Exploration
+# 🔬 1. Data Exploration
 
 Notebook:
 
-[`01_data_exploration.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/01_data_exploration.ipynb)
+```text
+notebooks/01_data_exploration.ipynb
+```
 
-The first notebook focuses on understanding the raw freight dataset, including:
+The exploration stage focuses on understanding the raw freight dataset before modeling.
+
+The analysis includes:
 
 * Dataset dimensions
-* Feature types
-* Missing values
-* Numerical variables
-* Categorical variables
+* Column types
+* Missing-value inspection
+* Numerical feature analysis
+* Categorical feature analysis
 * Target distribution
-* Potential data-quality issues
+* Data-quality checks
 * Relationships between important variables
-
-This step establishes the foundation for subsequent preprocessing and modeling decisions.
-
----
-
-# 🛠️ 2. Feature Engineering & Preprocessing
-
-Notebook:
-
-[`02_feature_engineering_preprocessing.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/02_feature_engineering_preprocessing.ipynb)
-
-Several domain-informed features were created to provide the models with additional information about routes, geography, time, and shipment characteristics.
-
-### Date Features
-
-The shipment date was transformed into:
-
-* `month`
-* `day_of_week`
-* `day_of_month`
-* `week_of_year`
-
-These features allow the model to capture temporal patterns in freight pricing.
-
-### Geographic Features
-
-The project creates:
-
-* `lat_diff`
-* `lon_diff`
-* `geographic_distance`
-
-The geographic distance is calculated using the **Haversine formula**, providing an approximate straight-line distance between pickup and delivery coordinates.
-
-### Route Efficiency
-
-A logarithmic route-efficiency feature was created:
-
-```text
-log_route_efficiency =
-log1p(distance / geographic_distance)
-```
-
-This captures the relationship between the reported shipment distance and geographic distance.
-
-### Weight Features
-
-Shipment weight was cleaned using its absolute value:
-
-```text
-weight_clean = abs(weight)
-```
-
-A normalized weight feature was also created:
-
-```text
-weight_per_mile = weight_clean / distance
-```
-
-This provides the model with information about shipment weight relative to route length.
-
----
-
-# ⚙️ Preprocessing Pipeline
-
-The preprocessing pipeline is implemented using a Scikit-learn `ColumnTransformer`.
-
-Categorical features include:
-
-```text
-pickup
-delivery
-equipment
-```
-
-Numerical features include geographic, temporal, distance, market, quote, and weight-related variables.
-
-The preprocessing pipeline produces:
-
-```text
-148 processed features
-```
-
-The same preprocessing logic is reused when transforming validation and December prediction data.
-
-The fitted preprocessing pipeline is saved as:
-
-```text
-artifacts/final_preprocessor.joblib
-```
-
----
-
-# 📊 Dataset Split
+* Identification of potential modeling issues
 
 The development dataset contains:
 
@@ -202,7 +164,96 @@ The development dataset contains:
 14 original columns
 ```
 
-After feature engineering:
+The original columns include shipment identifiers, pickup and delivery information, geographic coordinates, distance, equipment, weight, date, market signals, and the target freight rate.
+
+---
+
+# 🛠️ 2. Feature Engineering & Preprocessing
+
+Notebook:
+
+```text
+notebooks/02_feature_engineering_preprocessing.ipynb
+```
+
+Feature engineering incorporates domain-informed representations of route geometry, time, shipment characteristics, and freight movement.
+
+## Date Features
+
+The shipment date is transformed into:
+
+```text
+month
+day_of_week
+day_of_month
+week_of_year
+```
+
+These features allow the model to capture temporal patterns in freight pricing.
+
+---
+
+## Geographic Features
+
+Pickup and delivery coordinates are used to derive:
+
+```text
+lat_diff
+lon_diff
+geographic_distance
+```
+
+`geographic_distance` is calculated using the Haversine formula to estimate the straight-line distance between pickup and delivery locations.
+
+---
+
+## Route Efficiency
+
+A logarithmic route-efficiency feature is created from the relationship between reported shipment distance and geographic distance:
+
+```text
+log_route_efficiency =
+log1p(distance / geographic_distance)
+```
+
+This provides the model with an additional representation of route geometry.
+
+---
+
+## Weight Features
+
+Shipment weight is cleaned using its absolute value:
+
+```text
+weight_clean = abs(weight)
+```
+
+A normalized weight feature is then calculated:
+
+```text
+weight_per_mile =
+weight_clean / distance
+```
+
+This represents shipment weight relative to route length.
+
+---
+
+# ⚙️ Preprocessing Pipeline
+
+The preprocessing workflow uses Scikit-learn's `ColumnTransformer`.
+
+Categorical variables include:
+
+```text
+pickup
+delivery
+equipment
+```
+
+Numerical variables include geographic, temporal, distance, market, quote, and weight-related features.
+
+The engineered dataset contains:
 
 ```text
 48,000 rows
@@ -216,11 +267,36 @@ After preprocessing:
 148 processed features
 ```
 
-For model evaluation, the development data was split into:
+The fitted preprocessing pipeline is saved as:
 
 ```text
-Training set:   43,147 rows
-Validation set:  4,853 rows
+artifacts/preprocessor.joblib
+```
+
+The final fitted preprocessing pipeline is saved as:
+
+```text
+artifacts/final_preprocessor.joblib
+```
+
+The same preprocessing logic is reused for validation and December prediction data.
+
+---
+
+# 📊 Dataset Split
+
+For model evaluation, the development dataset was split into:
+
+```text
+Training set:    43,147 rows
+Validation set:   4,853 rows
+```
+
+Processed matrices:
+
+```text
+X_train_processed: (43,147, 148)
+X_val_processed:  (4,853, 148)
 ```
 
 The separate assessment validation dataset contains:
@@ -235,69 +311,93 @@ The separate assessment validation dataset contains:
 
 Notebook:
 
-[`03_modeling_evaluation.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/03_modeling_evaluation.ipynb)
+```text
+notebooks/03_modeling_evaluation.ipynb
+```
 
-Three modeling approaches were evaluated:
+Multiple regression approaches were evaluated using the same processed validation split.
+
+The evaluated approaches were:
 
 1. Linear Regression
 2. Ridge Regression
 3. XGBoost Regression
-
-Two ensemble approaches were also tested.
+4. 50/50 Linear Regression + XGBoost Ensemble
+5. 70/30 Weighted Linear Regression + XGBoost Ensemble
 
 ---
 
-## 📈 Evaluation Metrics
+# 📏 Evaluation Metrics
 
-The models were evaluated using:
+## MAE — Mean Absolute Error
 
-### MAE — Mean Absolute Error
-
-Measures the average absolute difference between predicted and actual freight rates.
+MAE measures the average absolute difference between predicted and actual freight rates.
 
 Lower values indicate smaller average prediction errors.
 
-### RMSE — Root Mean Squared Error
+---
 
-Penalizes larger prediction errors more strongly than MAE.
+## RMSE — Root Mean Squared Error
 
-Lower values indicate better performance.
+RMSE penalizes larger prediction errors more strongly than MAE.
 
-### R² — Coefficient of Determination
+Lower values indicate smaller squared prediction errors.
 
-Measures the proportion of target variance explained by the model.
+---
+
+## R² — Coefficient of Determination
+
+R² measures the proportion of target variance explained by the model.
 
 Higher values indicate greater explanatory performance.
 
 ---
 
-# 🧪 Model Results
+# 📈 Model Results
 
 | Model                                        |        MAE |       RMSE |         R² |
 | -------------------------------------------- | ---------: | ---------: | ---------: |
-| Linear Regression                            | **143.24** | **651.51** | **0.8183** |
-| Ridge (α=1.0)                                |     147.57 |     652.03 |     0.8180 |
+| **Linear Regression**                        | **140.61** |     650.55 |     0.8189 |
+| Ridge (α = 1.0)                              |     140.90 | **650.53** | **0.8189** |
 | XGBoost Baseline                             |     211.29 |     704.77 |     0.7874 |
-| Ensemble (50% Linear + 50% XGBoost)          |     163.02 |     663.30 |     0.8117 |
-| Weighted Ensemble (70% Linear + 30% XGBoost) |     150.61 |     654.84 |     0.8165 |
+| Ensemble (50% Linear + 50% XGBoost)          |     161.32 |     662.97 |     0.8119 |
+| Weighted Ensemble (70% Linear + 30% XGBoost) |     148.57 |     654.29 |     0.8168 |
 
-Based on the validation results, **Linear Regression was selected for the final training stage**, as it achieved the strongest validation metrics among the evaluated configurations.
+### Model Selection
+
+Linear Regression achieved the lowest MAE among all evaluated configurations:
+
+```text
+MAE = 140.61
+RMSE = 650.55
+R² = 0.8189
+```
+
+Ridge Regression produced a very similar validation result and achieved a slightly lower RMSE, but its MAE was higher than Linear Regression.
+
+The XGBoost baseline did not outperform the linear models on this validation split.
+
+The ensemble experiments were retained as documented alternatives for further experimentation.
+
+Based on the validation results and the project's primary focus on MAE, **Linear Regression was selected as the final model**.
 
 ---
 
-# 🏆 Final Model
+# 🏆 4. Final Model
 
 Notebook:
 
-[`04_final_model.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/04_final_model.ipynb)
+```text
+notebooks/04_final_model.ipynb
+```
 
-The final model is:
+The selected model is:
 
 ```text
 Linear Regression
 ```
 
-The model is retrained using the complete development dataset:
+The final model is retrained using the complete development dataset:
 
 ```text
 48,000 training samples
@@ -309,13 +409,19 @@ with:
 148 processed features
 ```
 
-The final trained model is saved as:
+The final model contains:
+
+```text
+148 coefficients
+```
+
+and is saved as:
 
 ```text
 artifacts/final_linear_regression.joblib
 ```
 
-The corresponding preprocessing pipeline is saved as:
+The corresponding fitted preprocessing pipeline is saved as:
 
 ```text
 artifacts/final_preprocessor.joblib
@@ -325,46 +431,52 @@ artifacts/final_preprocessor.joblib
 
 # 🔮 Validation Predictions
 
-The final model generates predictions for the separate validation dataset containing:
+The final model generates predictions for the separate assessment validation dataset.
+
+Dataset size:
 
 ```text
 12,000 loads
 ```
 
-The output file is:
+The submission file is:
 
 ```text
 validation_predictions.csv
 ```
 
-with the following schema:
+Output schema:
 
 | Column           | Description                |
 | ---------------- | -------------------------- |
 | `load_id`        | Unique shipment identifier |
 | `predicted_rate` | Predicted freight rate     |
 
-The generated file was validated to ensure:
+The final output was validated to ensure:
 
-* 12,000 rows
-* Correct column names
-* No missing values
-* No duplicate load IDs
-* No non-positive predictions
+```text
+Rows:                    12,000
+Columns:                 2
+Missing predictions:     0
+Duplicate load IDs:     0
+Non-positive predictions: 0
+```
+
+The model initially produced 11 non-positive raw predictions. These were handled during the final output validation step by applying a lower bound of `1.0` to ensure valid positive freight-rate predictions.
 
 ---
 
 # 📅 December 2025 Forecast
 
-The project also generates daily freight-rate predictions for a representative route during December 2025.
+The final model was also used to generate daily freight-rate predictions for a representative route during December 2025.
 
-Route:
+### Route
 
 ```text
 Lexington → Fort Wayne
 ```
 
-Shipment characteristics:
+### Shipment Characteristics
 
 ```text
 Distance: 360 miles
@@ -372,27 +484,33 @@ Equipment: Dry Van
 Weight: 32,000
 ```
 
-The December input contains:
+The forecast contains:
 
 ```text
 31 daily observations
 ```
 
-The final model generates one predicted freight rate for each day.
+Because December market observations were not present in the development dataset, the December market features were populated using the mean market information from the last available training month, October 2025.
 
-Predictions range from approximately:
+The resulting December predictions were generated using the same fitted preprocessing pipeline and final Linear Regression model.
 
-```text
-$750.58 – $832.84
-```
-
-with an average predicted rate of approximately:
+### Forecast Summary
 
 ```text
-$808.91
+Minimum prediction:  $813.71
+Maximum prediction:  $2,481.14
+Mean prediction:     $991.50
+Median prediction:   $837.84
 ```
 
-The predictions are stored in:
+Prediction validation:
+
+```text
+Non-positive predictions: 0
+Missing predictions:      0
+```
+
+The generated predictions are stored in:
 
 ```text
 data/december-chart-inputs.csv
@@ -400,29 +518,45 @@ data/december-chart-inputs.csv
 
 ---
 
-# 🌎 Geographic Modeling
+# 📊 December Forecast Visualization
 
-The project uses latitude and longitude information for both pickup and delivery locations.
-
-The Haversine formula is used to estimate geographic distance:
+The generated December forecast visualization is available at:
 
 ```text
+scorer_results/candidate_december.png
+```
+
+The chart provides a visual representation of the predicted daily freight-rate pattern throughout December 2025.
+
+---
+
+# 🌎 Geographic Modeling
+
+Geographic information is incorporated using pickup and delivery coordinates.
+
+The project calculates:
+
+```text
+lat_diff
+lon_diff
 geographic_distance
 ```
 
-This is combined with the provided shipment distance to create:
+The Haversine formula provides an approximate straight-line geographic distance between the two locations.
+
+This information is combined with the reported shipment distance to derive:
 
 ```text
 log_route_efficiency
 ```
 
-This allows the model to distinguish between geographic separation and the actual reported route distance.
+This allows the model to represent both geographic separation and the actual reported route distance.
 
 ---
 
 # 📦 Saved Artifacts
 
-The project saves reusable machine learning artifacts under:
+Reusable machine learning artifacts are stored under:
 
 ```text
 artifacts/
@@ -450,13 +584,41 @@ y_train.csv
 y_val.csv
 ```
 
-These artifacts make it possible to reuse the trained preprocessing and model without rebuilding the entire pipeline from scratch.
+These artifacts allow the preprocessing and final model to be reused without rebuilding the entire pipeline from raw data.
+
+---
+
+# 🧩 Source Modules
+
+The reusable source-code components are organized under:
+
+```text
+src/
+```
+
+### `features.py`
+
+Contains feature-engineering logic used to construct derived modeling features.
+
+### `preprocessing.py`
+
+Contains preprocessing-related logic for transforming raw and engineered features into model-ready representations.
+
+### `model.py`
+
+Contains model-related functionality.
+
+### `prediction.py`
+
+Contains prediction-generation functionality used by the project pipeline.
+
+This separation supports a more modular and maintainable project structure beyond the exploratory notebooks.
 
 ---
 
 # 🔁 Reproducibility
 
-The project is organized into sequential notebooks:
+The project follows a sequential workflow:
 
 ```text
 01 → Data Exploration
@@ -468,31 +630,53 @@ The project is organized into sequential notebooks:
 04 → Final Model Training & Prediction
 ```
 
-This structure makes the workflow easier to inspect, reproduce, and extend.
+The workflow can therefore be inspected from raw data exploration through final prediction generation.
+
+The trained preprocessing and model artifacts are persisted using `joblib`.
 
 ---
 
 # ▶️ How to Run
 
-Clone the repository:
+## 1. Clone the Repository
 
 ```bash
 git clone https://github.com/zeinab-nasser/freight-rate-prediction.git
 ```
 
-Navigate to the project:
-
 ```bash
 cd freight-rate-prediction
 ```
 
-Install the required Python packages:
+---
+
+## 2. Create a Python Environment
+
+A virtual environment can be created with:
 
 ```bash
-pip install numpy pandas scipy scikit-learn xgboost joblib jupyter
+python -m venv spotter-ml-env
 ```
 
-Launch Jupyter:
+Activate it on Windows:
+
+```bash
+spotter-ml-env\Scripts\activate
+```
+
+---
+
+## 3. Install Dependencies
+
+Install the project dependencies using:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 4. Launch Jupyter
 
 ```bash
 jupyter notebook
@@ -509,62 +693,141 @@ Run the notebooks sequentially:
 
 ---
 
+# 🧪 Output Validation
+
+The project includes a dedicated scoring script:
+
+```text
+score.py
+```
+
+The generated validation file can be checked against the expected submission structure.
+
+The final validation output follows the required schema:
+
+```text
+load_id
+predicted_rate
+```
+
+and contains:
+
+```text
+12,000 predictions
+```
+
+---
+
 # 💡 Key Technical Decisions
 
-### Why Linear Regression?
+## Why Linear Regression?
 
-Multiple models were evaluated on the validation split.
+Several regression approaches were evaluated on the same validation split.
 
-Linear Regression produced the strongest validation performance among the tested models, while the XGBoost baseline did not outperform the linear baseline on this dataset.
+Linear Regression achieved the lowest MAE:
 
-### Why Feature Engineering?
+```text
+140.61
+```
 
-Freight pricing depends on route characteristics, shipment properties, geographic relationships, market information, and time.
+and was therefore selected for the final training stage based on the project's primary error metric.
 
-Feature engineering provides the model with explicit representations of these relationships rather than relying exclusively on the raw variables.
+---
 
-### Why a Separate Final Training Stage?
+## Why Feature Engineering?
 
-After model comparison, the selected model was retrained using the complete development dataset.
+Freight pricing depends on multiple interacting characteristics.
 
-This allows the final model to use all available labeled development observations before generating predictions for the separate validation dataset.
+The project therefore provides the model with explicit representations of:
+
+* Route geometry
+* Geographic distance
+* Shipment distance
+* Shipment weight
+* Weight per mile
+* Temporal information
+* Pickup and delivery locations
+* Equipment type
+* Market conditions
+* Quote signals
+
+---
+
+## Why a Separate Final Training Stage?
+
+Model comparison was performed using a validation split from the development data.
+
+After selecting the model, the final Linear Regression model was retrained using all:
+
+```text
+48,000
+```
+
+development observations.
+
+This allows the final model to use the complete labeled development dataset before generating predictions for the separate assessment validation set.
 
 ---
 
 # ⚠️ Limitations & Future Improvements
 
-Potential future improvements include:
+Several areas could be explored in future iterations:
 
 * Hyperparameter optimization for tree-based models
-* Testing additional gradient boosting algorithms
+* Additional gradient-boosting algorithms
 * Cross-validation for more robust model comparison
 * More advanced route-level features
 * Historical route statistics
+* Route-specific pricing features
 * Seasonal and holiday indicators
-* Better treatment of extreme target values
-* Prediction intervals / uncertainty estimation
-* Model monitoring after deployment
-* Automated inference pipeline
+* Improved treatment of extreme target values
+* Prediction intervals and uncertainty estimation
+* Model monitoring
+* Automated inference pipelines
 * API deployment for real-time predictions
 
 ---
 
 # 📌 Final Results
 
-The final project successfully produces:
+The completed project provides:
 
 ```text
-✓ Complete exploratory analysis
+✓ Exploratory data analysis
+
 ✓ Domain-informed feature engineering
+
+✓ Geographic feature engineering
+
+✓ Temporal feature engineering
+
 ✓ Reproducible preprocessing pipeline
-✓ Model comparison
+
+✓ 148 processed model features
+
+✓ Evaluation of multiple regression approaches
+
+✓ Ensemble experimentation
+
 ✓ Validation-based model selection
+
 ✓ Final Linear Regression model
+
+✓ 48,000-sample final training dataset
+
 ✓ 12,000 validation predictions
-✓ December 2025 daily predictions
+
+✓ Validated submission file
+
+✓ December 2025 daily forecast
+
+✓ December forecast visualization
+
 ✓ Saved preprocessing artifacts
+
 ✓ Saved trained model
-✓ Submission-ready prediction file
+
+✓ Modular source-code structure
 ```
 
 ---
@@ -581,11 +844,56 @@ https://github.com/zeinab-nasser
 
 ---
 
-## 📚 Notebooks
+# 📚 Notebooks
 
-| Notebook                                                                                                                                                                  | Purpose                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| [`01_data_exploration.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/01_data_exploration.ipynb)                                   | Data exploration and understanding             |
-| [`02_feature_engineering_preprocessing.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/02_feature_engineering_preprocessing.ipynb) | Feature engineering and preprocessing          |
-| [`03_modeling_evaluation.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/03_modeling_evaluation.ipynb)                             | Model training and evaluation                  |
-| [`04_final_model.ipynb`](https://github.com/zeinab-nasser/freight-rate-prediction/blob/master/notebooks/04_final_model.ipynb)                                             | Final model training and prediction generation |
+| Notebook                                     | Purpose                                        |
+| -------------------------------------------- | ---------------------------------------------- |
+| `01_data_exploration.ipynb`                  | Data exploration and data-quality analysis     |
+| `02_feature_engineering_preprocessing.ipynb` | Feature engineering and preprocessing          |
+| `03_modeling_evaluation.ipynb`               | Model training, comparison, and evaluation     |
+| `04_final_model.ipynb`                       | Final model training and prediction generation |
+
+---
+
+# 📁 Main Outputs
+
+| Output                                     | Purpose                                       |
+| ------------------------------------------ | --------------------------------------------- |
+| `validation_predictions.csv`               | Final predictions for 12,000 validation loads |
+| `data/december-chart-inputs.csv`           | December 2025 daily predictions               |
+| `artifacts/final_linear_regression.joblib` | Trained final model                           |
+| `artifacts/final_preprocessor.joblib`      | Fitted final preprocessing pipeline           |
+| `scorer_results/candidate_december.png`    | December forecast visualization               |
+
+---
+
+## 🚀 End-to-End Summary
+
+```text
+Raw Freight Data
+       ↓
+Exploration
+       ↓
+Feature Engineering
+       ↓
+ColumnTransformer
+       ↓
+148 Processed Features
+       ↓
+Model Comparison
+       ↓
+Linear Regression Selected
+       ↓
+Full Development Training
+       ↓
+Final Model
+       ├───────────────┐
+       ↓               ↓
+12,000 Validation   December 2025
+Predictions         Forecast
+       ↓               ↓
+Submission File     Visualization
+```
+
+**Project repository:**
+https://github.com/zeinab-nasser/freight-rate-prediction
